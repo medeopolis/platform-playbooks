@@ -1,0 +1,12 @@
+---
+# Check if we're able to access the Vultr API endpoint
+
+- name: Test connection to Vultr API within Ansible
+  hosts: localhost
+  tasks:
+    - vultr.cloud.account_info:
+        api_key: "{{ vultr_api_key }}"
+      register: result
+    - debug:
+        msg: "{{ result }}"
+

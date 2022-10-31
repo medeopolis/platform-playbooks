@@ -1,0 +1,14 @@
+---
+# Your OpenStack (and Ansible) configuration is correct if this returns
+# information about your hosts.
+
+- name: Test Ansible and BinaryLane are talking
+  hosts: localhost
+  tasks:
+    - openstack.cloud.server_info:
+        all_projects: yes
+        cloud: binarylane
+      register: result
+    - debug:
+        msg: "{{ result.openstack_servers }}"
+
