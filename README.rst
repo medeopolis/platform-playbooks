@@ -45,6 +45,14 @@ Service specific notes
 Binary Lane
 -----------
 
+NOTE: as of November 2022 it was confirmed by Binary Lane support that they are
+no longer supporting their OpenStack API and that 2023 it will be replaced
+entirely by their new OpenAPI based API.
+The last known compatible Nova client was python-novaclient V4 from OpenStack
+Neuton.
+Still outstanding is the question of if they will provide an Ansible
+collection to support their cloud.
+
 * `Create API key`..
 * Check their `Openstack API Tutorial`.. for information about username and password.
 
