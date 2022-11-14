@@ -1,0 +1,97 @@
+---
+# These are the tasks directly related to instance creation. Other tasks - ssh
+# key management, DNS management, vultr account management - belong elsewhere.
+
+- name: Ensure all VMs which should be running at Vultr are
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Ensure instance_hostname has been passed
+      ansible.builtin.assert:
+        that:
+          - instance_hostname is defined
+          - instance_hostname |length > 0
+        fail_msg: "instance_hostname was not supplied, run with -e instance_hostname=abc.example.com"
+
+      # NOTE: VPCs are not currently usable for instance creation via Ansible
+      # so commenting out this block.
+      # https://github.com/vultr/ansible-collection-vultr/issues/23
+#     - name: Ensure VPC exists
+#       vultr.cloud.vpc:
+#         api_key: "{{ vultr_api_key }}"
+#         description: "{{ hostvars[instance_hostname].vpc_description }}"
+#         region: "{{ hostvars[instance_hostname].deployment_region }}"
+#         state: present
+#         v4_subnet: "{{ hostvars[instance_hostname].vpc_subnet }}"
+#         v4_subnet_mask: "{{ hostvars[instance_hostname].vpc_subnet_mask }}"
+#       register: vpc_result
+
+    - name: Ensure firewall rule group is configured for this host
+      vultr.cloud.firewall_group:
+        api_key: "{{ vultr_api_key }}"
+        # FIXME: instance_hostname is not being expanded, with or without {{}}
+        description: "{{ hostvars[instance_hostname].firewall_group_description |default('Group to hold all rules associated with ' + instance_hostname) }}"
+        state: present
+      register: firewall_group_result
+
+    - name: Ensure firewall rules exist
+      vultr.cloud.firewall_rule:
+        api_key: "{{ vultr_api_key }}"
+        group: "{{ firewall_group_result.vultr_firewall_group.description }}"
+        ip_type: v4
+        notes: "Access to port {{ item.port }} from {{ item.subnet }}/{{ item.subnet_size }}"
+        port: "{{ item.port }}"
+        protocol: tcp
+        state: present
+        subnet: "{{ item.subnet }}"
+        subnet_size: "{{ item.subnet_size }}"
+      when: firewall_group_result.vultr_firewall_group.description is defined
+      loop: "{{ hostvars[instance_hostname].firewall_rule_entries }}"
+      register: firewall_rules_result
+
+# TODO: consider adding startup script here even though I don't expect to use
+# it in this way
+# https://docs.ansible.com/ansible/latest/collections/vultr/cloud/startup_script_module.html
+
+    - name: Create Instance
+      vultr.cloud.instance:
+        api_key: "{{ vultr_api_key }}"
+        activation_email: "{{ hostvars[instance_hostname].instance_activation_email |default('no') }}"
+        enable_ipv6: false
+        backups: "{{ hostvars[instance_hostname].instance_backups |default('no') }}"
+        firewall_group: "{{ firewall_group_result.vultr_firewall_group.description |default(fallback_vultr_firewall_group) }}"
+        hostname: "{{ instance_hostname }}"
+        label: "{{ hostvars[instance_hostname].instance_label }}"
+        os: "{{ hostvars[instance_hostname].instance_os }}"
+        plan: "{{ hostvars[instance_hostname].instance_plan }}"
+        region: "{{ hostvars[instance_hostname].deployment_region }}"
+        ssh_keys: "{{ hostvars[instance_hostname].instance_ssh_keys }}"
+        # startup_script: "{{ hostvars[instance_hostname].startup_script_result }}"
+        state: present
+      register: instance_result
+
+    - name: Create block storage for this instance
+      vultr.cloud.block_storage:
+        api_key: "{{ vultr_api_key }}"
+        attached_to_instance: "{{ instance_result.vultr_instance.id }}"
+        label: "{{ item.name }}"
+        live: yes
+        region: "{{ hostvars[instance_hostname].deployment_region }}"
+        size_gb: "{{ item.volume_size }}"
+        state: present
+      when:
+        - instance_result is defined
+        - hostvars[instance_hostname].volume_entries is defined
+        - hostvars[instance_hostname].volume_entries |length > 0
+      loop: "{{ hostvars[instance_hostname].volume_entries }}"
+      register: volume_result
+
+    # Could take another ~80 seconds for the instance to boot.
+    # This assumes the testing host is within the firewall whitelist/s
+    - name: Check if SSH is available
+      wait_for:
+        delay: 60
+        host: "{{ instance_result.vultr_instance.main_ip }}"
+        port: 22
+        state: started
+
