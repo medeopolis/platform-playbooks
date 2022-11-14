@@ -53,36 +53,15 @@ Neuton.
 Still outstanding is the question of if they will provide an Ansible
 collection to support their cloud.
 
-* `Create API key`..
-* Check their `Openstack API Tutorial`.. for information about username and password.
-
-.. _`Create API key`: https://home.binarylane.com.au/api-info
-.. _`Openstack API Tutorial`: https://support.binarylane.com.au/support/articles/1000026198-openstack-command-line
-
-I suggest making a clouds.yaml:
-
-::
-
-  mkdir $HOME/.config/openstack
-
-Populate $HOME/.config/openstack/clouds.yaml with:
-
-::
-
-  clouds:
-    binarylane:
-      auth:
-        auth_url: https://nova-api.binarylane.com.au/v2.0
-        project_name: binarylane
-        username: email address
-        password: api key
+Because of this they have been removed until their integration improves.
 
 Vultr
 -----
 
 * `Enable Vultr API`.. then create API Key
 * Ensure your IP address/s are in the Access Control list
-* Set an ansible variable vultr_api_key; this is used by deployment/test-vultr.yaml
+* Set an Ansible variable vultr_api_key; this is used by
+  deployment/test-vultr.yaml and deployment/build-vultr-resource-stack.yaml
 
 .. _`Enable Vultr API`: https://my.vultr.com/settings/#settingsapi
 

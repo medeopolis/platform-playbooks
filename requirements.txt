@@ -5,6 +5,3 @@ dnspython
 # For Openstack.cloud collection
 openstacksdk>=0.36,<0.99.0
 
-# Openstack compute API access to Binary Lane; might be optional for ansible since it uses SDK; TODO test
-# python-openstackclient
-
