@@ -29,7 +29,6 @@
     - name: Ensure firewall rule group is configured for this host
       vultr.cloud.firewall_group:
         api_key: "{{ vultr_api_key }}"
-        # FIXME: instance_hostname is not being expanded, with or without {{}}
         description: "{{ hostvars[instance_hostname].firewall_group_description |default('Group to hold all rules associated with ' + instance_hostname) }}"
         state: present
       register: firewall_group_result
@@ -38,7 +37,7 @@
       vultr.cloud.firewall_rule:
         api_key: "{{ vultr_api_key }}"
         group: "{{ firewall_group_result.vultr_firewall_group.description }}"
-        ip_type: v4
+        ip_type: "{{ item.ip_gen }}"
         notes: "Access to port {{ item.port }} from {{ item.subnet }}/{{ item.subnet_size }}"
         port: "{{ item.port }}"
         protocol: tcp
@@ -46,7 +45,7 @@
         subnet: "{{ item.subnet }}"
         subnet_size: "{{ item.subnet_size }}"
       when: firewall_group_result.vultr_firewall_group.description is defined
-      loop: "{{ hostvars[instance_hostname].firewall_rule_entries }}"
+      loop: "{{ hostvars[instance_hostname].firewall_rule_entries |default(default_vultr_firewall_rule_entries) }}"
       register: firewall_rules_result
 
 # TODO: consider adding startup script here even though I don't expect to use
@@ -59,7 +58,7 @@
         activation_email: "{{ hostvars[instance_hostname].instance_activation_email |default('no') }}"
         enable_ipv6: false
         backups: "{{ hostvars[instance_hostname].instance_backups |default('no') }}"
-        firewall_group: "{{ firewall_group_result.vultr_firewall_group.description |default(fallback_vultr_firewall_group) }}"
+        firewall_group: "{{ firewall_group_result.vultr_firewall_group.description }}"
         hostname: "{{ instance_hostname }}"
         label: "{{ hostvars[instance_hostname].instance_label }}"
         os: "{{ hostvars[instance_hostname].instance_os }}"
@@ -94,4 +93,5 @@
         host: "{{ instance_result.vultr_instance.main_ip }}"
         port: 22
         state: started
+      when: instance_result.changed is true
 
