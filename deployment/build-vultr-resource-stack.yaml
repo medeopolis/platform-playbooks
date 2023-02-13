@@ -89,7 +89,6 @@
     # This assumes the testing host is within the firewall whitelist/s
     - name: Check if SSH is available
       wait_for:
-        delay: 60
         host: "{{ instance_result.vultr_instance.main_ip }}"
         port: 22
         state: started
