@@ -5,4 +5,5 @@ collections:
   - name: 'git+https://github.com/debops/debops#/ansible/,master'
   - name: openstack.cloud
   - name: vultr.cloud
+  - name: community.general
 
