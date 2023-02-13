@@ -1,0 +1,33 @@
+---
+
+# Things which are applied on all systems we manage - our baseline
+
+- name: Pre-DebOps configuration changes
+  hosts: all
+  tasks:
+    - name: Permit access through UFW on port 80 (for Lets Encrypt)
+      community.general.ufw:
+        rule: allow
+        comment: "Access to web ports for Lets Encrypt"
+        port: 80
+        proto: tcp
+      # Only web servers need these ports open.
+      when: "'debops_service_nginx' in group_names"
+      # TODO: Catch when "Status: inactive" is returned by ufw.might need a reboot to resolve that?
+
+# NOTE: Playbook imports have to sit at the top level.
+- name: Run DebOps common.yaml
+  ansible.builtin.import_playbook: debops.debops.common
+
+- name: Run DebOps Fail2ban
+  ansible.builtin.import_playbook: debops.debops.service.fail2ban
+
+- name: Post DebOps configuration changes
+  hosts: all
+  tasks:
+    # TODO: should we guard this with a check that Ferm is actually in place?
+    - name: Disable UFW (DebOps installed and configured Ferm)
+      community.general.ufw:
+        state: disabled
+      when: "'debops_service_nginx' in group_names"
+
