@@ -3,9 +3,12 @@ Playbooks to set up / configure infrastructure and services.
 **This repository assumes Ansible is installed and configured**
 
 The following directories contain Playbooks with specific duties:
-deployment - Creating VMs, VPCs, Load balancers, other infrastructurey things
+deployment - Creating VMs, VPCs, Load balancers, other
+            infrastructurey things
 platform - Management and configuration of the OS / settings of a deployed
             VM/LB/VPC/...
+decommission - Destroying resources created by 'deployment' scripts in an
+            orderly way.
 
 Note applications will have their own role/collection in a separate repository.
 
