@@ -4,9 +4,11 @@
 - name: Test connection to Vultr API within Ansible
   hosts: localhost
   tasks:
-    - vultr.cloud.account_info:
+    - name: Look up account information
+      vultr.cloud.account_info:
         api_key: "{{ vultr_api_key }}"
       register: result
-    - debug:
+    - name: Output account information
+      debug:
         msg: "{{ result }}"
 

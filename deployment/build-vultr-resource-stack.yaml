@@ -5,7 +5,7 @@
 
 - name: Ensure all VMs which should be running at Vultr are
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
   tasks:
     - name: Ensure instance_hostname has been passed
       ansible.builtin.assert:
@@ -30,7 +30,7 @@
     - name: Ensure firewall rule group is configured for this host
       vultr.cloud.firewall_group:
         api_key: "{{ vultr_api_key }}"
-        description: "{{ hostvars[instance_hostname].firewall_group_description |default('Group to hold all rules associated with ' + instance_hostname) }}"
+        description: "{{ hostvars[instance_hostname].firewall_group_description | default('Group to hold all rules associated with ' + instance_hostname) }}"
         state: present
       register: firewall_group_result
 
@@ -46,7 +46,7 @@
         subnet: "{{ item.subnet }}"
         subnet_size: "{{ item.subnet_size }}"
       when: firewall_group_result.vultr_firewall_group.description is defined
-      loop: "{{ hostvars[instance_hostname].firewall_rule_entries |default(default_vultr_firewall_rule_entries) }}"
+      loop: "{{ hostvars[instance_hostname].firewall_rule_entries | default(default_vultr_firewall_rule_entries) }}"
       register: firewall_rules_result
 
 # TODO: consider adding startup script here even though I don't expect to use
@@ -56,9 +56,9 @@
     - name: Create Instance
       vultr.cloud.instance:
         api_key: "{{ vultr_api_key }}"
-        activation_email: "{{ hostvars[instance_hostname].instance_activation_email |default('no') }}"
+        activation_email: "{{ hostvars[instance_hostname].instance_activation_email | default('no') }}"
         enable_ipv6: false
-        backups: "{{ hostvars[instance_hostname].instance_backups |default('no') }}"
+        backups: "{{ hostvars[instance_hostname].instance_backups | default('no') }}"
         firewall_group: "{{ firewall_group_result.vultr_firewall_group.description }}"
         hostname: "{{ instance_hostname }}"
         label: "{{ hostvars[instance_hostname].instance_label }}"
@@ -75,7 +75,7 @@
         api_key: "{{ vultr_api_key }}"
         attached_to_instance: "{{ instance_result.vultr_instance.id }}"
         label: "{{ item.name }}"
-        live: yes
+        live: true
         region: "{{ hostvars[instance_hostname].deployment_region }}"
         size_gb: "{{ item.volume_size }}"
         state: present

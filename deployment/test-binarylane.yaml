@@ -5,10 +5,12 @@
 - name: Test Ansible and BinaryLane are talking
   hosts: localhost
   tasks:
-    - openstack.cloud.server_info:
-        all_projects: yes
+    - name: Check server information
+      openstack.cloud.server_info:
+        all_projects: true
         cloud: binarylane
       register: result
-    - debug:
+    - name: Output server information
+      debug:
         msg: "{{ result.openstack_servers }}"
 

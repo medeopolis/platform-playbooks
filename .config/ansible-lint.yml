@@ -1,0 +1,6 @@
+---
+
+skip_list:
+  - fqcn[action-core]
+  - yaml[empty-lines]
+

@@ -6,7 +6,7 @@
 
 - name: Delete VM and associated resources at Vultr
   hosts: localhost
-  gather_facts: no
+  gather_facts: false
   vars:
     delete_volumes: true
   tasks:
@@ -31,7 +31,7 @@
     - name: Delete firewall group
       vultr.cloud.firewall_group:
         api_key: "{{ vultr_api_key }}"
-        description: "{{ hostvars[instance_hostname].firewall_group_description |default('Group to hold all rules associated with ' + instance_hostname) }}"
+        description: "{{ hostvars[instance_hostname].firewall_group_description | default('Group to hold all rules associated with ' + instance_hostname) }}"
         state: absent
       register: firewall_group_deletion
 
