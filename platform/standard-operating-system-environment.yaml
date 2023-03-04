@@ -4,6 +4,8 @@
 
 - name: Pre-DebOps configuration changes
   hosts: all
+  become: yes
+  become_user: root
   tasks:
     - name: Permit access through UFW on port 80 (for Lets Encrypt)
       community.general.ufw:
@@ -24,6 +26,8 @@
 
 - name: Post DebOps configuration changes
   hosts: all
+  become: yes
+  become_user: root
   tasks:
     # TODO: should we guard this with a check that Ferm is actually in place?
     - name: Disable UFW (DebOps installed and configured Ferm)
