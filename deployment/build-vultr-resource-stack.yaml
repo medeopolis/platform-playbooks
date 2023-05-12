@@ -41,7 +41,7 @@
         ip_type: "{{ item.ip_gen }}"
         notes: "Access to port {{ item.port }} from {{ item.subnet }}/{{ item.subnet_size }}"
         port: "{{ item.port }}"
-        protocol: tcp
+        protocol: "{{ item.proto |default('tcp') }}"
         state: present
         subnet: "{{ item.subnet }}"
         subnet_size: "{{ item.subnet_size }}"
