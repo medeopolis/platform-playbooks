@@ -2,8 +2,16 @@
 collections:
   # Required for debops
   - name: ansible.netcommon
-  - name: 'git+https://github.com/debops/debops#/ansible/,master'
+  # DebOps for management
+  - name: 'git+https://github.com/debops/debops#/ansible/,stable-3.0'
+  # For managing resources in Openstack API compatible clouds
   - name: openstack.cloud
+  # For managing resources at Vultr
   - name: vultr.cloud
+  # Misc resources
   - name: community.general
+  # Used for managing grafana resources
+  - name: grafana.grafana
+  # To interact with IPAM
+  - name: netbox.netbox
 
