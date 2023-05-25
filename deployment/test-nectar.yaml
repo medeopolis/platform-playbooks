@@ -1,0 +1,57 @@
+---
+
+# Rename to test-openstack if this works with nectar and ovh
+
+- name: Test connection to Nectar
+  hosts: localhost
+  tasks:
+    # This creates/populates openstack.clouds variable
+    # Because only one cloud is being requested openstack.clouds will be a list
+    # with one dictionary inside it.
+    - name: Access configuration for current cloud
+      openstack.cloud.config:
+        clouds:
+          - "{{ current_openstack_cloud }}"
+
+    - name: Authenticate to cloud
+      openstack.cloud.auth:
+        cloud: "{{ current_openstack_cloud }}"
+      # Returns auth_token; not sure what to do with it though - swift?
+
+    - name: Display auth token
+      debug:
+        var: auth_token
+
+# For reasons which are not obvious to me, the openstack client can run 'os
+# user show [my email]' and 'os project list --user [my email]' but Ansible
+# can't query here.
+# I will leave this here as a reminder to myself to try and debug it some day,
+# I'm sure its a tractable problem.
+
+    # FIXME: doesn't appear to be pulling any config
+#     - name: Gather information about connecting user
+#       openstack.cloud.identity_user_info:
+#         cloud: "{{ current_openstack_cloud }}"
+#         # filters
+#         name: "openstack.clouds.0.auth.username }}"
+#
+#     - name: Gather projects of connecting user
+#       openstack.cloud.project_info:
+#         cloud: "{{ current_openstack_cloud }}"
+#         filters:
+#           # enabled: true
+#       register: os_project_list
+#
+#     - debug:
+#         var: os_project_list
+
+    - name: List servers in project {{ openstack.clouds.0.auth.project_name }} on cloud {{ current_openstack_cloud }}
+      openstack.cloud.server_info:
+        cloud: "{{ current_openstack_cloud }}"
+      register: openstack_server_list
+
+    - name: Count list of servers
+      debug:
+        # var: openstack_server_list.openstack_servers
+        msg: "There are {{ openstack_server_list.openstack_servers |length }} servers in this project"
+
