@@ -39,14 +39,15 @@
         api_key: "{{ vultr_api_key }}"
         group: "{{ firewall_group_result.vultr_firewall_group.description }}"
         ip_type: "{{ item.ip_gen }}"
-        notes: "Access to port {{ item.port }} from {{ item.subnet }}/{{ item.subnet_size }}"
-        port: "{{ item.port }}"
+        notes: "Access to port range {{ item.port_min }} through {{ item.port_max }} from {{ item.subnet }}/{{ item.subnet_size }}"
+        port: "{{ item.port_min + ':' item.port_max }}"
         protocol: "{{ item.proto |default('tcp') }}"
         state: present
         subnet: "{{ item.subnet }}"
         subnet_size: "{{ item.subnet_size }}"
       when: firewall_group_result.vultr_firewall_group.description is defined
-      loop: "{{ hostvars[instance_hostname].firewall_rule_entries | default(default_vultr_firewall_rule_entries) }}"
+      # FIXME: so far i haven't managed to make this combine both sets of rules - which is what I actually need.
+      loop: "{{ hostvars[instance_hostname].firewall_rule_entries | default(default_firewall_rule_entries) }}"
       register: firewall_rules_result
 
 # TODO: consider adding startup script here even though I don't expect to use
@@ -60,7 +61,7 @@
         enable_ipv6: false
         backups: "{{ hostvars[instance_hostname].instance_backups | default('no') }}"
         firewall_group: "{{ firewall_group_result.vultr_firewall_group.description }}"
-        hostname: "{{ instance_hostname }}"
+        hostname: "{{ instance_hostname |default(inventory_hostname) }}"
         label: "{{ hostvars[instance_hostname].instance_label }}"
         os: "{{ hostvars[instance_hostname].instance_os }}"
         plan: "{{ hostvars[instance_hostname].instance_plan }}"
@@ -68,6 +69,7 @@
         ssh_keys: "{{ hostvars[instance_hostname].instance_ssh_keys }}"
         # startup_script: "{{ hostvars[instance_hostname].startup_script_result }}"
         state: present
+        user_data: "{{ instance_cloud_init_data |default('') }}"
       register: instance_result
 
     - name: Create block storage for this instance
@@ -94,4 +96,8 @@
         port: 22
         state: started
       when: instance_result.changed is true
+
+    - name: Server technical details
+      debug:
+        var: instance_result
 
