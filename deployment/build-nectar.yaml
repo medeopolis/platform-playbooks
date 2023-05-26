@@ -1,0 +1,98 @@
+---
+# These are the tasks directly related to instance creation. Other tasks - ssh
+# key management, DNS management - belong elsewhere.
+# -e instance_hostname=medeopolis.example.com -e service_tenant=nectar-pt-karl
+
+- name: Build resources in Nectar
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Ensure instance_hostname has been passed
+      ansible.builtin.assert:
+        that:
+          - instance_hostname is defined
+          - instance_hostname |length > 0
+        fail_msg: "instance_hostname was not supplied, run with -e instance_hostname=abc.example.com"
+
+    - name: Ensure service_tenant has been passed
+      ansible.builtin.assert:
+        that:
+          - service_tenant is defined
+          - service_tenant |length > 0
+        fail_msg: "instance_hostname was not supplied, run with -e instance_hostname=abc.example.com"
+
+    - name: Access configuration for current cloud
+      openstack.cloud.config:
+        clouds:
+          - "{{ service_tenant }}"
+      # Always do this, even in check mode
+      check_mode: false
+
+# TODO: create private network if requested
+
+    - name: Ensure security group is configured for this host
+      openstack.cloud.security_group:
+        cloud: "{{ service_tenant }}"
+        name: "{{ hostvars[instance_hostname].security_group_description | default('Group to hold all rules associated with ' + instance_hostname) }}"
+      register: firewall_group_result
+
+    - name: Ensure security group rules exist
+      openstack.cloud.security_group_rule:
+        cloud: "{{ service_tenant }}"
+        description: "Access to port range {{ item.port_min }} through {{ item.port_max |default(item.port_min) }} from {{ item.subnet }}/{{ item.subnet_size }}"
+        ethertype: "{{ 'IP' + item.ip_gen }}"
+        port_range_min: "{{ item.port_min }}"
+        port_range_max: "{{ item.port_max |default(item.port_min)}}"
+        protocol: "{{ item.proto |default('tcp') }}"
+        remote_ip_prefix: "{{ item.subnet + '/' + item.subnet_size }}"
+        security_group: "{{ firewall_group_result.secgroup.name }}"
+      loop: "{{ hostvars[instance_hostname].firewall_rule_entries | default(default_firewall_rule_entries) }}"
+      when: firewall_group_result.secgroup.name is defined
+      register: firewall_rules_result
+
+    - name: Create volume storage for this instance
+      openstack.cloud.volume:
+        cloud: "{{ service_tenant }}"
+        # Docs say AZ is deprecated but its required for the playbook to run.
+        # Reported at https://storyboard.openstack.org/#!/story/2010771
+        availability_zone: "{{ hostvars[instance_hostname].instance_launch_zone }}"
+        display_description: "{{ item.description |default('Created by automation') }}"
+        display_name: "{{ item.name }}"
+        size: "{{ item.volume_size }}"
+      when:
+        - hostvars[instance_hostname].volume_entries is defined
+        - hostvars[instance_hostname].volume_entries |length > 0
+      loop: "{{ hostvars[instance_hostname].volume_entries }}"
+      register: volume_result
+
+# In openstack the volumes have to exist to be attached at instance creation time.
+    - name: Create Instance
+      openstack.cloud.server:
+        cloud: "{{ service_tenant }}"
+        # Description failing on Nectar; need to check if its permitted. module definitely seems to support it but I don't see it in horizon
+        # description: "{{ hostvars[instance_hostname].instance_label }}"
+        availability_zone: "{{ hostvars[instance_hostname].instance_launch_zone }}"
+        flavor: "{{ hostvars[instance_hostname].instance_plan }}"
+        image: "{{ hostvars[instance_hostname].instance_os }}"
+        name: "{{ instance_hostname |default(inventory_hostname) }}"
+        security_groups:
+          - default
+          - "{{ firewall_group_result.secgroup.name }}"
+        userdata: "{{ instance_cloud_init_data |default('') }}"
+        # Thanks to https://stackoverflow.com/a/74225835 for this very simple answer
+        volumes: "{{ hostvars[instance_hostname].volume_entries |default([]) | flatten | map(attribute='name') }}"
+      when: firewall_group_result.secgroup.name is defined
+      register: instance_result
+
+    - name: Check if SSH is available
+      wait_for:
+        host: "{{ instance_result.openstack.public_v4 }}"
+        port: 22
+        state: started
+      when: instance_result.changed is true
+
+    # on Nectar this is pages of text; might want to pick out specifics here
+    - name: Server technical details
+      debug:
+        var: instance_result.openstack.properties
+
