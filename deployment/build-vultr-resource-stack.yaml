@@ -14,6 +14,13 @@
           - instance_hostname |length > 0
         fail_msg: "instance_hostname was not supplied, run with -e instance_hostname=abc.example.com"
 
+    - name: Ensure inventory_hostname hostvars are defined
+      ansible.builtin.assert:
+        that:
+          - hostvars[instance_hostname] is defined
+          - hostvars[instance_hostname] |length > 0
+        fail_msg: "hostvars are  not defined; add this host to an inventory source and add it to appropriate groups"
+
       # NOTE: VPCs are not currently usable for instance creation via Ansible
       # so commenting out this block.
       # https://github.com/vultr/ansible-collection-vultr/issues/23
@@ -39,8 +46,8 @@
         api_key: "{{ vultr_api_key }}"
         group: "{{ firewall_group_result.vultr_firewall_group.description }}"
         ip_type: "{{ item.ip_gen }}"
-        notes: "Access to port range {{ item.port_min }} through {{ item.port_max }} from {{ item.subnet }}/{{ item.subnet_size }}"
-        port: "{{ item.port_min + ':' item.port_max }}"
+        notes: "Access to port range {{ item.port_min }} through {{ item.port_max |default(item.port_min) }} from {{ item.subnet }}/{{ item.subnet_size }}"
+        port: "{{ item.port_min + ':' + item.port_max |default(item.port_min) }}"
         protocol: "{{ item.proto |default('tcp') }}"
         state: present
         subnet: "{{ item.subnet }}"
