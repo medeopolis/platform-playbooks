@@ -3,7 +3,7 @@
 # key management, DNS management - belong elsewhere.
 # -e instance_hostname=medeopolis.example.com -e service_tenant=nectar-pt-karl
 
-- name: Build resources in Nectar
+- name: Build resources in Openstack
   hosts: localhost
   gather_facts: false
   tasks:
@@ -13,6 +13,13 @@
           - instance_hostname is defined
           - instance_hostname |length > 0
         fail_msg: "instance_hostname was not supplied, run with -e instance_hostname=abc.example.com"
+
+    - name: Ensure inventory_hostname hostvars are defined
+      ansible.builtin.assert:
+        that:
+          - hostvars[instance_hostname] is defined
+          - hostvars[instance_hostname] |length > 0
+        fail_msg: "hostvars are  not defined; add this host to an inventory source"
 
     - name: Ensure service_tenant has been passed
       ansible.builtin.assert:
@@ -69,7 +76,9 @@
     - name: Create Instance
       openstack.cloud.server:
         cloud: "{{ service_tenant }}"
-        # Description failing on Nectar; need to check if its permitted. module definitely seems to support it but I don't see it in horizon
+        # Description failing on Nectar; need to check if its permitted. Module
+        # definitely seems to support it but I don't see it in horizon.
+        # Possibly support varies by cloud?
         # description: "{{ hostvars[instance_hostname].instance_label }}"
         availability_zone: "{{ hostvars[instance_hostname].instance_launch_zone }}"
         flavor: "{{ hostvars[instance_hostname].instance_plan }}"
@@ -94,5 +103,5 @@
     # on Nectar this is pages of text; might want to pick out specifics here
     - name: Server technical details
       debug:
-        var: instance_result.openstack.properties
+        var: instance_result.openstack
 

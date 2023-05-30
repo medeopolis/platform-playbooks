@@ -1,8 +1,7 @@
 ---
+# -e current_openstack_cloud=ovh-test
 
-# Rename to test-openstack if this works with nectar and ovh
-
-- name: Test connection to Nectar
+- name: Test connection to OpenStack API
   hosts: localhost
   tasks:
     # This creates/populates openstack.clouds variable
