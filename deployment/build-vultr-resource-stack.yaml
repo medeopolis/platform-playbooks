@@ -21,18 +21,20 @@
           - hostvars[instance_hostname] |length > 0
         fail_msg: "hostvars are  not defined; add this host to an inventory source and add it to appropriate groups"
 
-      # NOTE: VPCs are not currently usable for instance creation via Ansible
-      # so commenting out this block.
-      # https://github.com/vultr/ansible-collection-vultr/issues/23
-#     - name: Ensure VPC exists
-#       vultr.cloud.vpc:
-#         api_key: "{{ vultr_api_key }}"
-#         description: "{{ hostvars[instance_hostname].vpc_description }}"
-#         region: "{{ hostvars[instance_hostname].deployment_region }}"
-#         state: present
-#         v4_subnet: "{{ hostvars[instance_hostname].vpc_subnet }}"
-#         v4_subnet_mask: "{{ hostvars[instance_hostname].vpc_subnet_mask }}"
-#       register: vpc_result
+    - name: Ensure VPC exists
+      vultr.cloud.vpc:
+        api_key: "{{ vultr_api_key }}"
+        description: "{{ hostvars[instance_hostname].vpc_description }}"
+        region: "{{ hostvars[instance_hostname].deployment_region }}"
+        state: present
+        v4_subnet: "{{ hostvars[instance_hostname].vpc_subnet }}"
+        v4_subnet_mask: "{{ hostvars[instance_hostname].vpc_subnet_mask }}"
+      when:
+        - hostvars[instance_hostname].vpc_subnet
+        - hostvars[instance_hostname].vpc_subnet_mask
+      register: vpc_result
+      failed_when:
+        - ( vpc_result.vultr_vpc.v4_subnet != "{{ hostvars[instance_hostname].vpc_subnet }}" ) and vpc_result.changed
 
     - name: Ensure firewall rule group is configured for this host
       vultr.cloud.firewall_group:
@@ -57,10 +59,6 @@
       loop: "{{ hostvars[instance_hostname].firewall_rule_entries | default(default_firewall_rule_entries) }}"
       register: firewall_rules_result
 
-# TODO: consider adding startup script here even though I don't expect to use
-# it in this way
-# https://docs.ansible.com/ansible/latest/collections/vultr/cloud/startup_script_module.html
-
     - name: Create Instance
       vultr.cloud.instance:
         api_key: "{{ vultr_api_key }}"
@@ -74,9 +72,9 @@
         plan: "{{ hostvars[instance_hostname].instance_plan }}"
         region: "{{ hostvars[instance_hostname].deployment_region }}"
         ssh_keys: "{{ hostvars[instance_hostname].instance_ssh_keys }}"
-        # startup_script: "{{ hostvars[instance_hostname].startup_script_result }}"
         state: present
         user_data: "{{ instance_cloud_init_data |default('') }}"
+        vpcs: [ "{{ hostvars[instance_hostname].vpc_description |default(omit) }}" ]
       register: instance_result
 
     - name: Create block storage for this instance
