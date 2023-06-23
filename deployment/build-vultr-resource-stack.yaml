@@ -76,6 +76,7 @@
         user_data: "{{ instance_cloud_init_data |default('') }}"
         vpcs: [ "{{ hostvars[instance_hostname].vpc_description |default(omit) }}" ]
       register: instance_result
+      when: firewall_group_result.vultr_firewall_group.description is defined
 
     - name: Create block storage for this instance
       vultr.cloud.block_storage:
