@@ -25,10 +25,23 @@
         - "'debops_service_nginx' in group_names"
         - ufw_stat.stat.exists
       # TODO: Catch when "Status: inactive" is returned by ufw. Might need a reboot to resolve that?
+    - name: Create sudo.log (work around problem in resources role)
+      copy:
+        content: ''
+        dest: /var/log/sudo.log
+        owner: 'root'
+        group: 'adm'
+        mode: '0640'
 
 # NOTE: Playbook imports have to sit at the top level.
 - name: Run DebOps common.yaml
   ansible.builtin.import_playbook: debops.debops.common
+
+# TODO: consider using sys; includes machine, kmod and some other roles.
+# ansible.builtin.import_playbook: debops.debops.layer.sys.yml
+
+- name: Configure kernel modules
+  ansible.builtin.import_playbook: debops.debops.service.kmod
 
 - name: Run DebOps Fail2ban
   ansible.builtin.import_playbook: debops.debops.service.fail2ban
