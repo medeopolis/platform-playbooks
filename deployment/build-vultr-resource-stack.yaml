@@ -34,7 +34,7 @@
         - hostvars[instance_hostname].vpc_subnet_mask
       register: vpc_result
       failed_when:
-        - ( vpc_result.vultr_vpc.v4_subnet != "{{ hostvars[instance_hostname].vpc_subnet }}" ) and vpc_result.changed
+        - ( vpc_result.vultr_vpc.v4_subnet != hostvars[instance_hostname].vpc_subnet ) and vpc_result.changed
 
     - name: Ensure firewall rule group is configured for this host
       vultr.cloud.firewall_group:
