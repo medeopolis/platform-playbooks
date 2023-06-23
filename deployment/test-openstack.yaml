@@ -21,12 +21,6 @@
       debug:
         var: auth_token
 
-# For reasons which are not obvious to me, the openstack client can run 'os
-# user show [my email]' and 'os project list --user [my email]' but Ansible
-# can't query here.
-# I will leave this here as a reminder to myself to try and debug it some day,
-# I'm sure its a tractable problem.
-
     # FIXME: doesn't appear to be pulling any config
 #     - name: Gather information about connecting user
 #       openstack.cloud.identity_user_info:
@@ -52,5 +46,5 @@
     - name: Count list of servers
       debug:
         # var: openstack_server_list.openstack_servers
-        msg: "There are {{ openstack_server_list.openstack_servers |length }} servers in this project"
+        msg: "There are {{ openstack_server_list.openstack_servers | length }} servers in this project"
 

@@ -11,7 +11,7 @@
       ansible.builtin.assert:
         that:
           - instance_hostname is defined
-          - instance_hostname |length > 0
+          - instance_hostname | length > 0
         fail_msg: "instance_hostname was not supplied, run with -e instance_hostname=abc.example.com"
 
     - name: Ensure inventory_hostname hostvars are defined
@@ -46,11 +46,11 @@
     - name: Ensure security group rules exist
       openstack.cloud.security_group_rule:
         cloud: "{{ service_tenant }}"
-        description: "Access to port range {{ item.port_min }} through {{ item.port_max |default(item.port_min) }} from {{ item.subnet }}/{{ item.subnet_size }}"
+        description: "Access to port range {{ item.port_min }} through {{ item.port_max | default(item.port_min) }} from {{ item.subnet }}/{{ item.subnet_size }}"
         ethertype: "{{ 'IP' + item.ip_gen }}"
         port_range_min: "{{ item.port_min }}"
-        port_range_max: "{{ item.port_max |default(item.port_min)}}"
-        protocol: "{{ item.proto |default('tcp') }}"
+        port_range_max: "{{ item.port_max | default(item.port_min) }}"
+        protocol: "{{ item.proto | default('tcp') }}"
         remote_ip_prefix: "{{ item.subnet + '/' + item.subnet_size }}"
         security_group: "{{ firewall_group_result.secgroup.name }}"
       loop: "{{ hostvars[instance_hostname].firewall_rule_entries | default(default_firewall_rule_entries) }}"
@@ -63,12 +63,12 @@
         # Docs say AZ is deprecated but its required for the playbook to run.
         # Reported at https://storyboard.openstack.org/#!/story/2010771
         availability_zone: "{{ hostvars[instance_hostname].instance_launch_zone }}"
-        display_description: "{{ item.description |default('Created by automation') }}"
+        display_description: "{{ item.description | default('Created by automation') }}"
         display_name: "{{ item.name }}"
         size: "{{ item.volume_size }}"
       when:
         - hostvars[instance_hostname].volume_entries is defined
-        - hostvars[instance_hostname].volume_entries |length > 0
+        - hostvars[instance_hostname].volume_entries | length > 0
       loop: "{{ hostvars[instance_hostname].volume_entries }}"
       register: volume_result
 
@@ -83,13 +83,13 @@
         availability_zone: "{{ hostvars[instance_hostname].instance_launch_zone }}"
         flavor: "{{ hostvars[instance_hostname].instance_plan }}"
         image: "{{ hostvars[instance_hostname].instance_os }}"
-        name: "{{ instance_hostname |default(inventory_hostname) }}"
+        name: "{{ instance_hostname | default(inventory_hostname) }}"
         security_groups:
           - default
           - "{{ firewall_group_result.secgroup.name }}"
-        userdata: "{{ instance_cloud_init_data |default('') }}"
+        userdata: "{{ instance_cloud_init_data | default('') }}"
         # Thanks to https://stackoverflow.com/a/74225835 for this very simple answer
-        volumes: "{{ hostvars[instance_hostname].volume_entries |default([]) | flatten | map(attribute='name') }}"
+        volumes: "{{ hostvars[instance_hostname].volume_entries | default([]) | flatten | map(attribute='name') }}"
       when: firewall_group_result.secgroup.name is defined
       register: instance_result
 

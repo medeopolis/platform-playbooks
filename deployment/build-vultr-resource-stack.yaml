@@ -11,14 +11,14 @@
       ansible.builtin.assert:
         that:
           - instance_hostname is defined
-          - instance_hostname |length > 0
+          - instance_hostname | length > 0
         fail_msg: "instance_hostname was not supplied, run with -e instance_hostname=abc.example.com"
 
     - name: Ensure inventory_hostname hostvars are defined
       ansible.builtin.assert:
         that:
           - hostvars[instance_hostname] is defined
-          - hostvars[instance_hostname] |length > 0
+          - hostvars[instance_hostname] | length > 0
         fail_msg: "hostvars are  not defined; add this host to an inventory source and add it to appropriate groups"
 
     - name: Ensure VPC exists
@@ -66,15 +66,15 @@
         enable_ipv6: false
         backups: "{{ hostvars[instance_hostname].instance_backups | default('no') }}"
         firewall_group: "{{ firewall_group_result.vultr_firewall_group.description }}"
-        hostname: "{{ instance_hostname |default(inventory_hostname) }}"
+        hostname: "{{ instance_hostname | default(inventory_hostname) }}"
         label: "{{ hostvars[instance_hostname].instance_label }}"
         os: "{{ hostvars[instance_hostname].instance_os }}"
         plan: "{{ hostvars[instance_hostname].instance_plan }}"
         region: "{{ hostvars[instance_hostname].deployment_region }}"
         ssh_keys: "{{ hostvars[instance_hostname].instance_ssh_keys }}"
         state: present
-        user_data: "{{ instance_cloud_init_data |default('') }}"
-        vpcs: [ "{{ hostvars[instance_hostname].vpc_description |default(omit) }}" ]
+        user_data: "{{ instance_cloud_init_data | default('') }}"
+        vpcs: [ "{{ hostvars[instance_hostname].vpc_description | default(omit) }}" ]
       register: instance_result
       when: firewall_group_result.vultr_firewall_group.description is defined
 
@@ -90,7 +90,7 @@
       when:
         - instance_result is defined
         - hostvars[instance_hostname].volume_entries is defined
-        - hostvars[instance_hostname].volume_entries |length > 0
+        - hostvars[instance_hostname].volume_entries | length > 0
       loop: "{{ hostvars[instance_hostname].volume_entries }}"
       register: volume_result
 
