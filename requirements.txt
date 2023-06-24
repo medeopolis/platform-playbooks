@@ -1,10 +1,4 @@
 
-# For https://github.com/vmware/ansible-module-vcloud-director; checked 2022-09-28
-pyvcloud
-
-# This is not available as a collection, also is not a python module. fuuu
-# git+https://github.com/vmware/ansible-module-vcloud-director.git
-
 # For DebOps collection
 dnspython
 
