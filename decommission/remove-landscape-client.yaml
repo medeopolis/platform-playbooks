@@ -1,0 +1,29 @@
+---
+
+- name: Remove landscape client from our environment
+  hosts: all
+  become: true
+  tasks:
+    - name: Stop landscape service
+      service:
+        name: landscape-client
+        state: stopped
+      ignore_errors: true
+    - name: Remove landscape package
+      apt:
+        name: landscape-client
+        state: absent
+        purge: true
+      ignore_errors: true
+    - name: Remove landscape user
+      user:
+        name: landscape
+        state: absent
+        remove: true
+      ignore_errors: true
+    - name: Remove landscape group
+      group:
+        name: landscape
+        state: absent
+      ignore_errors: true
+
