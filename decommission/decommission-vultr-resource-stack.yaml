@@ -1,4 +1,6 @@
 ---
+# (C) 2023 Medeopolis. Karl Goetz <karl+ansible@medeopolis.au>
+
 # TODO: option to retain block storage,
 # There doesn't seem to be a way to access backups via vultr.cloud collection.
 # -e instance_hostname=medeopolis.example.com to set host for deletion. Required.

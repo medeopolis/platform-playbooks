@@ -39,24 +39,20 @@ required for the playbooks in this repository.
 Other setup
 ===========
 
-None at this time.
+There is an outstanding task to document the variables used by these playbooks.
 
 Service specific notes
 ======================
 
+OpenStack clouds
+----------------
 
-Binary Lane
------------
+Openstack support has been tested on OVH Cloud (https://www.ovhcloud.com/) and
+Nectar Research Cloud (https://nectar.org.au/).
 
-NOTE: as of November 2022 it was confirmed by Binary Lane support that they are
-no longer supporting their OpenStack API and that 2023 it will be replaced
-entirely by their new OpenAPI based API.
-The last known compatible Nova client was python-novaclient V4 from OpenStack
-Neuton.
-Still outstanding is the question of if they will provide an Ansible
-collection to support their cloud.
-
-Because of this they have been removed until their integration improves.
+The included playbooks assume clouds.yaml is in use but as long as the python
+openstack bindings find a supported authentication mechanism things should work
+ok.
 
 Vultr
 -----
@@ -67,4 +63,18 @@ Vultr
   deployment/test-vultr.yaml and deployment/build-vultr-resource-stack.yaml
 
 .. _`Enable Vultr API`: https://my.vultr.com/settings/#settingsapi
+
+
+Licence
+=======
+
+These files are, in the main, developed by Medeopolis and released under the
+terms of *GNU General Public License 3 or any later version*.
+
+On any Debian derivative the full text of GNU GPL3 can be found in
+/usr/share/common-licenses/GPL-3 or it can be viewed online at
+https://www.gnu.org/licenses/gpl-3.0.en.html .
+
+Where files are imported from a third party (either as a base or in whole) we
+will endeavour to include their copyright notice here.
 

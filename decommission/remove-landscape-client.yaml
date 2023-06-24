@@ -1,4 +1,5 @@
 ---
+# (C) 2023 Medeopolis. Karl Goetz <karl+ansible@medeopolis.au>
 
 - name: Remove landscape client from our environment
   hosts: all

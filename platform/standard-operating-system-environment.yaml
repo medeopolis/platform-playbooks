@@ -1,4 +1,5 @@
 ---
+# (C) 2023 Medeopolis. Karl Goetz <karl+ansible@medeopolis.au>
 
 # Things which are applied on all systems we manage - our baseline
 

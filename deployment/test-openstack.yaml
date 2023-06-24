@@ -1,4 +1,6 @@
 ---
+# (C) 2023 Medeopolis. Karl Goetz <karl+ansible@medeopolis.au>
+
 # -e current_openstack_cloud=ovh-test
 
 - name: Test connection to OpenStack API

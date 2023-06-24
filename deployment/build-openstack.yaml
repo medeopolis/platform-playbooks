@@ -1,4 +1,6 @@
 ---
+# (C) 2023 Medeopolis. Karl Goetz <karl+ansible@medeopolis.au>
+
 # These are the tasks directly related to instance creation. Other tasks - ssh
 # key management, DNS management - belong elsewhere.
 # -e instance_hostname=medeopolis.example.com -e service_tenant=nectar-pt-karl

@@ -1,4 +1,6 @@
 ---
+# (C) 2023 Medeopolis. Karl Goetz <karl+ansible@medeopolis.au>
+
 # Check if we're able to access the Vultr API endpoint
 
 - name: Test connection to Vultr API within Ansible
