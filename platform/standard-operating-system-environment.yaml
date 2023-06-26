@@ -28,6 +28,7 @@
       # TODO: Catch when "Status: inactive" is returned by ufw. Might need a reboot to resolve that?
     - name: Create sudo.log (work around problem in resources role)
       copy:
+        force: false
         content: ''
         dest: /var/log/sudo.log
         owner: 'root'
