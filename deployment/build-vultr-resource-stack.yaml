@@ -3,7 +3,48 @@
 
 # These are the tasks directly related to instance creation. Other tasks - ssh
 # key management, DNS management, vultr account management - belong elsewhere.
+
+# Playbook parameters:
 # -e instance_hostname=medeopolis.example.com
+
+# Below is an example inventory section to go in
+# inventory/host_vars/medeopolis.example.com or split up in group_vars/ (or
+# some dynamic source...). Shows required fields and the format of their values.
+
+# # Required
+# vultr_api_key: 'some long string'
+# deployment_region: syd
+# instance_os: "Ubuntu 22.04 LTS x64"
+# instance_label: "Server built via Medeopolis platform-playbooks"
+# instance_plan: "xyz-12-23ab"
+# firewall_group_description: "String describing firewall rule group"
+# One of firewall_rule_entries or default_firewall_rule_entries must be defined
+# default_firewall_rule_entries:
+#   - subnet: "0.0.0.0"
+#     port_min: "80"
+#     port_max: "1024"
+#     subnet_size: "0"
+#     ip_gen: v4
+#   - subnet: "0.0.0.0"
+#     port_min: "443"
+#     port_max: "1024"
+#     subnet_size: "0"
+#     ip_gen: v4
+#
+# # Optional
+# instance_cloud_init_data: |
+#   #cloud-config
+#   ssh_authorized_keys:
+#     - 'ecdsa-sha2-nistp256 blah blah'
+#     - 'ssh-rsa foo bar'
+# volume_entries:
+#   - { name: "test volume 1", volume_size: 10 }
+#   - { name: "test volume two", volume_size: 20 }
+# vpc_description: 'My VPC in Sydney'
+# vpc_subnet: 10.11.12.0
+# vpc_subnet_mask: 24
+# Plus lots of other dials...
+
 
 - name: Ensure all VMs which should be running at Vultr are
   hosts: localhost

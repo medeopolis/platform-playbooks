@@ -1,6 +1,9 @@
 ---
 # (C) 2023 Medeopolis. Karl Goetz <karl+ansible@medeopolis.au>
 
+# Use --limit=hostname.example.com or --limit=group_name for more precise
+# removal.
+
 - name: Remove landscape client from our environment
   hosts: all
   become: true

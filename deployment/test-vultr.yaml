@@ -3,6 +3,8 @@
 
 # Check if we're able to access the Vultr API endpoint
 
+# vultr_api_key must be set in inventory.
+
 - name: Test connection to Vultr API within Ansible
   hosts: localhost
   tasks:
