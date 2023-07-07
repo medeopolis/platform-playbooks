@@ -3,11 +3,14 @@ collections:
   # Required for debops
   - name: ansible.netcommon
   # DebOps for management
-  - name: 'git+https://github.com/debops/debops#/ansible/,stable-3.0'
+  - name: 'https://github.com/debops/debops#/ansible/'
+    type: git
+    version: "stable-3.0"
   # For managing resources in Openstack API compatible clouds
   - name: openstack.cloud
   # For managing resources at Vultr
-  - name: vultr.cloud >= 1.5.0
+  - name: vultr.cloud
+    version: ">=1.5.0"
   # Misc resources
   - name: community.general
   # Used for managing grafana resources
