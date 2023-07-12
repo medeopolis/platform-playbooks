@@ -1,6 +1,7 @@
 
 # For DebOps collection
 dnspython
+netaddr
 
 # For Openstack.cloud collection
 openstacksdk>=0.36,<0.99.0
