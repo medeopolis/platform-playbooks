@@ -18,3 +18,8 @@ collections:
   # To interact with IPAM
   - name: netbox.netbox
 
+roles:
+  - name: semaphore
+    src: 'https://github.com/morbidick/ansible-role-semaphore.git'
+    type: git
+
