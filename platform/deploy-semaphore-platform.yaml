@@ -1,9 +1,12 @@
 ---
 # (C) 2023 Medeopolis. Karl Goetz <karl+ansible@medeopolis.au>
 
+# NOTE: run debops.debops.common, specifically dhparam+secret, to make enable the playbooks below.
+
 - name: Deploy Ansible Semaphore UI
   hosts: semaphore_servers
   roles:
+    - debops.debops.pki
     - debops.debops.nginx
     - debops.debops.ferm
     - semaphore
