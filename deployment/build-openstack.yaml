@@ -5,7 +5,7 @@
 # key management, DNS management - belong elsewhere.
 
 # Playbook parameters:
-# -e instance_hostname=medeopolis.example.com -e service_tenant=nectar-pt-karl
+# -e instance_hostname=medeopolis.example.com -e service_tenant=openstack-environment
 
 # Below is an example inventory section to go in
 # inventory/host_vars/medeopolis.example.com or split up in group_vars/ (or
@@ -65,7 +65,7 @@
         that:
           - service_tenant is defined
           - service_tenant |length > 0
-        fail_msg: "instance_hostname was not supplied, run with -e instance_hostname=abc.example.com"
+        fail_msg: "service_tenant was not supplied, run with -e service_tenant=name-of-cloud"
 
     - name: Access configuration for current cloud
       openstack.cloud.config:
