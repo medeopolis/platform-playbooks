@@ -1,0 +1,61 @@
+---
+# (C) 2023 Medeopolis. Karl Goetz <karl+ansible@medeopolis.au>
+
+# Playbook parameters:
+# -e service_tenant=openstack-environment to select from clouds.yaml cloud.
+# -e instance_hostname=medeopolis.example.com to set host for deletion. Required.
+# -e delete_volumes=true to delete any volumes configured for this host. Optional
+# -e delete_floating_ips=true to delete any IPs configured for this host. Optional
+
+- name: Delete VM and associated resources from OpenStack
+  hosts: localhost
+  gather_facts: false
+  vars:
+    delete_volumes: false
+    delete_floating_ips: false
+  tasks:
+    - name: Ensure instance_hostname has been passed
+      ansible.builtin.assert:
+        that:
+          - instance_hostname is defined
+          - instance_hostname |length > 0
+        fail_msg: "instance_hostname was not supplied, run with -e instance_hostname=abc.example.com"
+
+    - name: Ensure service_tenant has been passed
+      ansible.builtin.assert:
+        that:
+          - service_tenant is defined
+          - service_tenant |length > 0
+        fail_msg: "service_tenant was not supplied, run with -e service_tenant=name-of-cloud"
+
+    - name: Access configuration for current cloud
+      openstack.cloud.config:
+        clouds:
+          - "{{ service_tenant }}"
+      # Always do this, even in check mode
+      check_mode: false
+
+    # TODO - name: Confirm you wish to delete {{ instance_hostname }}
+    # read user input
+
+    # TODO: query openstack for instances current info
+    # TODO: Notify if anything is currently attached/associated with instance but not known via inventory
+
+    - name: Delete instance
+      openstack.cloud.server:
+        cloud: "{{ service_tenant }}"
+        auto_ip: "{{ instance_wants_public_ip |default(true) }}"
+        delete_ips: "{{ delete_floating_ips }}"
+        name: "{{ instance_hostname }}"
+        state: absent
+        terminate_volume: "{{ delete_volumes }}"
+      register: instance_deletion
+
+    - name: Delete Security Group
+      openstack.cloud.security_group:
+        cloud: "{{ service_tenant }}"
+        name: "{{ hostvars[instance_hostname].security_group_description | default('Group to hold all rules associated with ' + instance_hostname) }}"
+        state: absent
+      register: delete_security_group
+
+
