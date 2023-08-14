@@ -91,9 +91,10 @@
         port_range_max: "{{ item.port_max | default(item.port_min) }}"
         protocol: "{{ item.proto | default('tcp') }}"
         remote_ip_prefix: "{{ item.subnet + '/' + item.subnet_size }}"
-        security_group: "{{ firewall_group_result.secgroup.name }}"
+        security_group: "{{ firewall_group_result.security_group.name }}"
       loop: "{{ hostvars[instance_hostname].firewall_rule_entries | default(default_firewall_rule_entries) }}"
-      when: firewall_group_result.secgroup.name is defined
+      when:
+        - firewall_group_result.security_group.name is defined
       register: firewall_rules_result
 
     - name: Create volume storage for this instance
@@ -125,11 +126,13 @@
         name: "{{ instance_hostname | default(inventory_hostname) }}"
         security_groups:
           - default
-          - "{{ firewall_group_result.secgroup.name }}"
+          - "{{ firewall_group_result.security_group.name }}"
         userdata: "{{ instance_cloud_init_data | default('') }}"
         # Thanks to https://stackoverflow.com/a/74225835 for this very simple answer
         volumes: "{{ hostvars[instance_hostname].volume_entries | default([]) | flatten | map(attribute='name') }}"
-      when: firewall_group_result.secgroup.name is defined
+      when:
+       # If no public IP required, security_group is optional (choosing IPs still broken)
+        - firewall_group_result.security_group.name is defined or instance_wants_public_ip is false
       register: instance_result
 
     - name: Check if SSH is available
@@ -142,5 +145,6 @@
     # on Nectar this is pages of text; might want to pick out specifics here
     - name: Server technical details
       debug:
-        var: instance_result.openstack
+        var: instance_result.server
+      when: instance_result.changed is true
 

@@ -8,6 +8,7 @@ collections:
     version: "stable-3.0"
   # For managing resources in Openstack API compatible clouds
   - name: openstack.cloud
+    version: ">=2.0.0"
   # For managing resources at Vultr
   - name: vultr.cloud
     version: ">=1.5.0"
