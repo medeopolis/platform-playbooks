@@ -18,8 +18,18 @@
     - name: Permit access through UFW on port 80 (for Lets Encrypt)
       community.general.ufw:
         rule: allow
-        comment: "Access to web ports for Lets Encrypt"
+        comment: "Access to http for Lets Encrypt"
         port: 80
+        proto: tcp
+      # Only web servers need these ports open.
+      when:
+        - "'debops_service_nginx' in group_names"
+        - ufw_stat.stat.exists
+    - name: Permit access through UFW on port 443 (for Lets Encrypt)
+      community.general.ufw:
+        rule: allow
+        comment: "Access to https for Lets Encrypt"
+        port: 443
         proto: tcp
       # Only web servers need these ports open.
       when:
