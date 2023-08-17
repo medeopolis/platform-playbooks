@@ -3,10 +3,13 @@
 dnspython
 netaddr
 
-# For OVH and others
+# For Openstack services
 openstacksdk
 
 # For AWS
 boto3
 botocore
+
+# For gitlab module
+python-gitlab
 

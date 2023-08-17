@@ -1,0 +1,29 @@
+---
+
+- name: Update Gitlab projects to have deploy keys
+  hosts: gitlab_deploykey_hosts
+  tasks:
+    # Unsure how to do this via ansible
+    # - name: Check when access token will expire
+
+    # https://docs.ansible.com/ansible/latest/collections/community/crypto/openssh_keypair_module.html#ansible-collections-community-crypto-openssh-keypair-module
+    - name: Generate host specific key for deployment
+      community.crypto.openssh_keypair:
+        path: "/etc/ssh/deploy_key_{{ project_identifier }}"
+      when: project_gitlab_repository is defined
+      register: create_host_deploy_key
+
+    # https://docs.ansible.com/ansible/latest/collections/community/general/gitlab_deploy_key_module.html
+    - name: Add deploy key to gitlab project
+      delegate_to: localhost
+      community.general.gitlab_deploy_key:
+        api_url: https://gitlab.com/
+        api_token: "{{ gitlab_api_token }}"
+        can_push: true
+        project: "{{ project_gitlab_repository }}"
+        title: "{{ project_identifier }} Deploy key on {{ inventory_hostname}}"
+        state: present
+        key: "{{ create_host_deploy_key.public_key + ' ' + create_host_deploy_key.comment }}"
+      when:
+        - create_host_deploy_key.failed is false
+
