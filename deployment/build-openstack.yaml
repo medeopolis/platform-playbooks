@@ -58,7 +58,7 @@
         that:
           - hostvars[instance_hostname] is defined
           - hostvars[instance_hostname] |length > 0
-        fail_msg: "hostvars are  not defined; add this host to an inventory source"
+        fail_msg: "hostvars are not defined; add this host to an inventory source"
 
     - name: Ensure service_tenant has been passed
       ansible.builtin.assert:
