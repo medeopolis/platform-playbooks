@@ -80,6 +80,9 @@
       openstack.cloud.security_group:
         cloud: "{{ service_tenant }}"
         name: "{{ hostvars[instance_hostname].security_group_description | default('Group to hold all rules associated with ' + instance_hostname) }}"
+      when:
+        # TODO: check if this actually works
+        - hostvars[instance_hostname].security_group_description in instance_security_groups |default([])
       register: firewall_group_result
 
     - name: Ensure security group rules exist
@@ -112,6 +115,11 @@
       loop: "{{ hostvars[instance_hostname].volume_entries }}"
       register: volume_result
 
+    # TODO: test this works if firewall_group_result.security_group.name is defined (:
+    - name: Make security group list for use in instance creation
+      set_fact:
+        security_group_list_combined: "{{ instance_security_groups |default([]) + ([firewall_group_result.security_group.name] if (firewall_group_result.security_group.name is defined and firewall_group_result.security_group.name |length > 0) else [] ) }}"
+
 # In openstack the volumes have to exist to be attached at instance creation time.
     - name: Create Instance
       openstack.cloud.server:
@@ -124,15 +132,12 @@
         flavor: "{{ hostvars[instance_hostname].instance_plan }}"
         image: "{{ hostvars[instance_hostname].instance_os }}"
         name: "{{ instance_hostname | default(inventory_hostname) }}"
-        security_groups:
-          - default
-          - "{{ firewall_group_result.security_group.name }}"
+        # FIXME: 'nics' is not working (TM) and i've tried a lot of variations :(
+        # nics: "{{ instance_networks |default([]) }}"
+        security_groups: "{{ security_group_list_combined }}"
         userdata: "{{ instance_cloud_init_data | default('') }}"
         # Thanks to https://stackoverflow.com/a/74225835 for this very simple answer
         volumes: "{{ hostvars[instance_hostname].volume_entries | default([]) | flatten | map(attribute='name') }}"
-      when:
-       # If no public IP required, security_group is optional (choosing IPs still broken)
-        - firewall_group_result.security_group.name is defined or instance_wants_public_ip is false
       register: instance_result
 
     - name: Check if SSH is available
