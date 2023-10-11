@@ -1,0 +1,29 @@
+---
+# (C) 2023 Medeopolis. Karl Goetz <karl+ansible@medeopolis.au>
+
+- name: Deploy Grafana agent
+  hosts: grafana_clients
+  roles:
+    - grafana.grafana.grafana_agent
+
+- name: Back up servers with Duply
+  hosts: debops_service_duply
+  become: true
+  become_user: root
+  pre_tasks:
+    - name: Prepare pki environment
+      ansible.builtin.import_role:
+        name: 'debops.debops.pki'
+        tasks_from: 'main_env'
+  roles:
+    # Wraps up juju4.gpgkey_generate to provide an intermediate interface and run pre-role tasks.
+    # For debops__no_log, facts, and other ... core... things.
+    - role: debops.debops.core
+    # To create required directories
+    - role: debops.debops.secret
+      secret_directories:
+        - '{{ pki_env_secret_directories }}'
+    - role: medeopolis.debops-gpgkey
+    # Do backups.
+    - role: medeopolis.debops-duply
+
