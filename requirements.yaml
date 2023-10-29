@@ -3,9 +3,11 @@ collections:
   # Required for debops
   - name: ansible.netcommon
   # DebOps for management
-  - name: 'https://github.com/debops/debops#/ansible/'
-    type: git
-    version: "stable-3.0"
+#   - name: 'https://github.com/debops/debops#/ansible/'
+#     type: git
+#     version: "stable-3.0"
+  - name: debops.debops
+    version: ">=3.0.0"
   # For managing resources in Openstack API compatible clouds
   - name: openstack.cloud
     version: ">=2.0.0"
@@ -16,6 +18,7 @@ collections:
   - name: community.general
   # Used for managing grafana resources
   - name: grafana.grafana
+    version: ">=2.0.1"
   # To interact with IPAM
   - name: netbox.netbox
   # For AWS management
