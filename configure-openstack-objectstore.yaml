@@ -1,0 +1,45 @@
+---
+# (C) 2023 Medeopolis. Karl Goetz <karl+ansible@medeopolis.au>
+
+# Separate to build-openstack.yaml because, despite being largely identical,
+# this can reasonable be exepcted to run independently of instance creation.
+
+# Playbook parameters:
+# -e service_tenant=openstack-environment (required)
+# -e container_name=name_or_ID_of_swift_container - how the container can be identified (required)
+# -e container_read_permission='magic string' if public can access container; default is private (optional)
+
+# ansible-playbook configure-openstack-objectstore.yaml -e service_tenant=example-vendor -e container_name=another-container-test
+
+- name: Create Object Storage (Swift) container in an openstack cloud
+  hosts: localhost
+  tasks:
+    - debug: var=service_tenant
+    - name: Access configuration for current cloud
+      openstack.cloud.config:
+        clouds:
+          - "{{ service_tenant }}"
+      # Always do this, even in check mode
+      check_mode: false
+      register: openstack_cloud_config_set
+      # Using this as a when instead of assert like build-openstack so these
+      # commands can be embeded in other playbooks / roles
+      when:
+        - service_tenant is defined
+        - service_tenant |length > 0
+
+    - debug: var=openstack_cloud_config_set
+    - name: Create object storage container
+      openstack.cloud.object_container:
+        cloud: "{{ service_tenant }}"
+#         metadata:
+#           purpose: ... backups etc
+#           host group: ... something something
+#           etc
+        name: "{{ container_name }}"
+        read_ACL: "{{ container_read_permission |default('') }}"
+        # region_name: "{{ container_region }}" do we need this ?
+        state: present
+      register: openstack_object_container_creation
+      when: not openstack_cloud_config_set.failed
+
