@@ -1,0 +1,23 @@
+---
+
+# (C) 2024 Medeopolis. Karl Goetz <karl+ansible@medeopolis.au>
+
+# This prevents further communication until the agent is re-enabled or removed. Possible use cases:
+# - losing access to the server for a period of time
+# - trialing some other SIEM
+# - ...?
+
+# Ensure you further --limit to the specific hosts being disabled or every host will be disabled!
+
+- name: Disable Wazuh client on a host and stop the service
+  hosts: wazuh_clients
+  tasks:
+    - name: Disable and stop Wazuh
+      systemd_service:
+        daemon_reload: true
+        enabled: false
+        force: true
+        masked: true
+        name: wazuh-agent.service
+        state: stopped
+
