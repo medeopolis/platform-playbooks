@@ -3,5 +3,10 @@
 dnspython
 netaddr
 
+# For OVH and others
 openstacksdk
+
+# For AWS
+boto3
+botocore
 

@@ -18,9 +18,11 @@ collections:
   - name: grafana.grafana
   # To interact with IPAM
   - name: netbox.netbox
+  # For AWS management
+  - name: amazon.aws
 
-roles:
-  - name: semaphore
-    src: 'https://github.com/morbidick/ansible-role-semaphore.git'
-    type: git
+# roles:
+#   - name: semaphore
+#     src: 'https://github.com/morbidick/ansible-role-semaphore.git'
+#     type: git
 
