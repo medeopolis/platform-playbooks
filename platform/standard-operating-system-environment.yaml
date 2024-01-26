@@ -45,6 +45,22 @@
         group: 'adm'
         mode: '0640'
 
+    - name: Disable and stop Snapd services
+      systemd_service:
+        daemon_reload: true
+        enabled: false
+        force: true
+        masked: true
+        name: "{{ item }}"
+        state: stopped
+      with_items:
+        - 'snapd.service'
+        - 'snapd.socket'
+      when:
+        - ansible_distribution == 'Ubuntu'
+        - not keep_snapd_functional |default('false')
+
+
 # NOTE: Playbook imports have to sit at the top level.
 - name: Run DebOps common.yaml
   ansible.builtin.import_playbook: debops.debops.common
