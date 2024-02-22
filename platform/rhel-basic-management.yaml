@@ -1,0 +1,148 @@
+---
+
+# For OUR RHEL 8 server
+- hosts: rhel_servers
+  become: true
+  become_user: root
+  roles:
+    - robertdebock.epel
+    - robertdebock.fail2ban
+
+  tasks:
+    # Most dependencies came from baseos/appstream so are hopefully ok.
+
+    - name: Check if EPEL is installed
+      tags: epel
+      stat:
+        path: /etc/yum.repos.d/epel.repo
+      register: epel_installed
+
+    # TODO: Only do this if epel is configured and not running in check mode. in fairness though, everything here only works with epel installed
+
+    # TODO: check for a file indicating subscription set up?
+    # FIXME: should not use command module
+    - name: Setup codeready repository required by epel
+      command: subscription-manager repos --enable "codeready-builder-for-rhel-8-x86_64-rpms"
+
+    - name: Install etckeeper to track changes
+      package:
+        name: etckeeper
+        state: present
+    - name: Initialise repository in /etc/
+      command: etckeeper init
+      args:
+        chdir: /etc
+        creates: /etc/.git
+    - name: Commit repository in /etc/
+      command: etckeeper commit Ansible initial commit
+      args:
+        chdir: /etc
+      register: etckeeper_commit_result
+      failed_when:
+        - etckeeper_commit_result.rc > 0
+        - "'nothing to commit, working tree clean' not in etckeeper_commit_result.stdout"
+      changed_when:
+        etckeeper_commit_result.rc == 0
+
+    - name: Install needs-restarting utility
+      package:
+        name: yum-utils
+
+    - name: Perform OS package updates
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Run needs-restarting utility to check if reboot is recommended
+      command: needs-restarting --reboothint
+      register: needs_restarting_return
+      # 0+1 are expected return codes
+      failed_when: needs_restarting_return.rc > 1
+
+    - name: Reboot if needed
+      reboot:
+      when: needs_restarting_return.rc == 1
+
+      # Boo to replicating stuff debops does. boo.
+    - name: Ensure all expected user accounts exist
+      user:
+        name: "{{ item.name }}"
+        comment: "{{ item.comment }}"
+        groups: "{{ ['wheel'] + item.groups |default([]) }}"
+        append: true
+        password: "{{ item.password }}"
+      with_items: "{{ system_users__accounts }}"
+      register: user_accounts_created
+
+    # Some code lifted from debops to ease using existing inventory
+    - name: Update SSH keys for users
+      ansible.posix.authorized_key:
+        key: "{{ (item.sshkeys if item.sshkeys is string else '\n'.join(item.sshkeys)) | string }}"
+        exclusive: '{{ item.sshkeys_exclusive | d(omit) }}'
+        user: "{{ item.name }}"
+        state: present
+      with_items: "{{ system_users__accounts }}"
+      # Task fails if running in check mode and user doesn't exist. This is an easy work around
+      # Note; optional alternative is to when: based on user id in user_accounts_created
+      when: not ansible_check_mode
+
+    # from https://stackoverflow.com/a/65261020 then improvised
+    - name: Update sshd configuration
+      lineinfile:
+        path: "/etc/ssh/sshd_config"
+        regexp: "^(#)?{{item.key}}"
+        line: "{{item.key}} {{item.value}}"
+        state: present
+        validate: sshd -t -f %s
+      loop:
+        - { key: "PermitRootLogin", value: "no" }
+        - { key: "PasswordAuthentication", value: "no" }
+      register: ssh_config_updated
+
+    - name: Restart SSH if config updates safely
+      systemd:
+        name: sshd
+        state: restarted
+      when: ssh_config_updated |bool
+
+# https://support.binarylane.com.au/support/solutions/articles/1000022811-mpanel-memory
+- name: Set up mpanel memory graph support when hosting at Binary Lane
+  hosts: rhel_servers:&cloud_binarylane
+  become: true
+  become_user: root
+  tasks:
+    # RHEL has several; check which one is installed by other tasks and use that.
+    # - name: Ensure Python3 is installed
+
+    - name: Source memory graph code
+      unarchive:
+        creates: /var/tmp/usr/local/bin/mpanel-memory-graph
+        dest: /var/tmp
+        remote_src: true
+        src: http://mirror.binarylane.com.au/tools/mpanel-memory-graph.tar.gz
+      register: archive_code_sourced
+
+    # FIXME: These two moves will probably need selinux context added
+
+    - name: Move memory script in to place
+      copy:
+        dest: /usr/local/bin/mpanel-memory-graph
+        group: root
+        mode: '0555'
+        owner: root
+        remote_src: true
+        src: /var/tmp/usr/local/bin/mpanel-memory-graph
+      register: graph_script_installed
+
+    - name: Move cron job in to place
+      copy:
+        dest: /etc/cron.d/mpanel-memory-graph
+        group: root
+        mode: '0755'
+        owner: root
+        remote_src: true
+        src: /var/tmp/etc/cron.d/mpanel-memory-graph
+      register: cron_job_installed
+
+
+
