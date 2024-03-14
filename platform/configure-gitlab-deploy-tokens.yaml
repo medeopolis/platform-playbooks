@@ -1,0 +1,33 @@
+---
+
+- hosts: localhost
+  vars:
+    gitlab_api_url: 'https://gitlab.com/api/v4'
+      # https://stackoverflow.com/a/65416209 urlencode doesn't encode /.
+    gitlab_project_deploy_tokens_endpoint: "{{ gitlab_api_url }}/projects/{{ project_gitlab_repository | urlencode | replace('/', '%2F') }}/deploy_tokens/"
+  tasks:
+  - name: Gather current gitlab deploy tokens for this project
+    url:
+      method: 'GET'
+      url: "{{ gitlab_project_deploy_tokens_endpoint }}"
+    register: gitlab_project_deploy_tokens_list
+
+  # NOTE: At the moment this creates a new token on every run. needs something like
+  # when: inventory_hostname not in gitlab_project_deploy_tokens_list.stdout
+  # https://docs.gitlab.com/ee/api/deploy_tokens.html#create-a-project-deploy-token
+  - name: Create GitLab deploy token
+    delegate_to: localhost
+    uri:
+      # TODO: make expiry one year from today
+      # FIXME: change name; its garbage if run from localhost.
+      body: "{'name': \"{{ project_identifier }} Deploy token for {{ inventory_hostname }}\", 'expires_at': \"2025-03-04\", 'username': \"gl_deploy_token_{{ inventory_hostname_short }}\", 'scopes': [\"read_repository\"]}"
+      body_format: 'json'
+      method: 'POST'
+      # https://docs.gitlab.com/ee/api/rest/index.html#namespaced-path-encoding
+      url: "{{ gitlab_project_deploy_tokens_endpoint }}"
+      headers:
+        PRIVATE-TOKEN: "{{ gitlab_api_token }}"
+    register: gitlab_deploy_token_creation
+    failed_when: gitlab_deploy_token_creation.status >= 300
+    changed_when: gitlab_deploy_token_creation.status == 201
+
