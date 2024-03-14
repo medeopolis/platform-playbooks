@@ -8,6 +8,8 @@
 
     # https://docs.ansible.com/ansible/latest/collections/community/crypto/openssh_keypair_module.html#ansible-collections-community-crypto-openssh-keypair-module
     - name: Generate host specific key for deployment
+      become: true
+      become_user: root
       community.crypto.openssh_keypair:
         path: "/etc/ssh/deploy_key_{{ project_identifier }}"
       when: project_gitlab_repository is defined
