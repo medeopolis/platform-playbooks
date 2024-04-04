@@ -2,12 +2,9 @@
 collections:
   # Required for debops
   - name: ansible.netcommon
-  # DebOps for management
-#   - name: 'https://github.com/debops/debops#/ansible/'
-#     type: git
-#     version: "stable-3.0"
+  # DebOps for base system management
   - name: debops.debops
-    version: ">=3.0.0"
+    version: "3.1.0"
   # For managing resources in Openstack API compatible clouds
   - name: openstack.cloud
     version: ">=2.0.0"
@@ -24,8 +21,11 @@ collections:
   # For AWS management
   - name: amazon.aws
 
-# roles:
-#   - name: semaphore
-#     src: 'https://github.com/morbidick/ansible-role-semaphore.git'
-#     type: git
+roles:
+  - name: medeopolis.debops-gpgkey
+    src: https://github.com/medeopolis/debops-gpgkey.git
+    type: git
+  - name: medeopolis.debops-duply
+    src: https://github.com/medeopolis/debops-duply.git
+    type: git
 
